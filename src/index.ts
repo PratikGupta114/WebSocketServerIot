@@ -7,7 +7,7 @@ import { appConfiguration } from "./config";
 import { MetaData } from "./data/Types";
 import { activeConnections } from "./data/ConnectionsDataService";
 import { onWebSocketMessageHandler } from "./websockets/MessageHandlers";
-import { onPongReceiveHandler, onWebSocketCloseHandler } from "./websockets/ConnectionControlHandlers";
+import { onPongReceiveHandler, onWebSocketCloseHandler, sendPings } from "./websockets/ConnectionControlHandlers";
 import { activeConnectionsRequestHandler, httpUpgradeHandler } from "./restApi/APIHandlers";
 
 
@@ -47,3 +47,5 @@ webSocketServer.on("connection", (ws, request) => {
 httpServer.listen(appConfiguration.port, () => {
     console.log(`App is now listening to ${appConfiguration.port}`);
 });
+
+setInterval(sendPings, appConfiguration.pingIntervalMillis);

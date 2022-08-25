@@ -13,6 +13,9 @@ export const onWebSocketCloseHandler: (ws: WebSocket.WebSocket, code: number, re
 };
 
 export const onPongReceiveHandler: (ws: WebSocket.WebSocket, data: Buffer) => void = (ws, data) => {
+
+    // console.log("On Pong received !");
+
     if (!activeConnections.has(ws)) {
         console.error("This websocket connection is not present in the active connections map");
         return;
