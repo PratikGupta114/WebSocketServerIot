@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "g-ccd-ws-demo"
+  },
+  "targets": {
+    "g-ccd-ws-demo": {
+      "hosting": {
+        "main": [
+          "ccdws"
+        ]
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 const card_dec_api = "http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
 const card_get_api = "http://deckofcardsapi.com/api/deck/"
-const ws_server_api = "192.168.112:3001"
-// const ws_server_api = "34.160.199.195:80"
+// const ws_server_api = "192.168.112:3001"
+const ws_server_api = "34.160.199.195:80"
 
 const deviceID_auto = Math.random().toString(16).substr(2, 8);
 let socket = new WebSocket(`ws://${ws_server_api}/echo?deviceID=${deviceID_auto};&pathName=test;&lastPongReceived=0;`);
