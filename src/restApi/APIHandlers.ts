@@ -70,6 +70,7 @@ export const activeConnectionsRequestHandler = (req: express.Request, res: expre
         });
     }
 
+    res.header('access-control-allow-origin', '*')
     res.status(200).send({
         "message": "Connections fetch success",
         "count": connectionList.length,

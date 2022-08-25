@@ -8,7 +8,8 @@
 #container,
 #select-button,
 #send-button,
-#active-conn-button {
+#active-conn-button,
+#active-conn-list {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 40px;
   font-weight: bold;
@@ -24,7 +25,9 @@
 }
 
 #send-button:disabled,
-#send-button[disabled] {
+#send-button[disabled],
+#select-button:disabled,
+#select-button[disabled] {
   border-color: red;
   background-color: #cccccc;
   color: #666666;

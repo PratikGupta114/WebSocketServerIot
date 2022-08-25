@@ -1,13 +1,14 @@
 const card_dec_api = "http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
 const card_get_api = "http://deckofcardsapi.com/api/deck/"
-const ws_server_api = "localhost:3001"
+const ws_server_api = "192.168.112:3001"
 // const ws_server_api = "34.160.199.195:80"
 
 const deviceID_auto = Math.random().toString(16).substr(2, 8);
 let socket = new WebSocket(`ws://${ws_server_api}/echo?deviceID=${deviceID_auto};&pathName=test;&lastPongReceived=0;`);
 
 socket.onopen = function (e) {
-  alert("[open] Connection established");
+  document.getElementById("deviceID").innerHTML = "Device ID:" + deviceID_auto + ""
+  alert("[open] Connection established with device id: " + deviceID_auto);
 };
 
 socket.onmessage = function (event) {
@@ -40,14 +41,14 @@ function selectCard() {
       selectedCard = data.cards[0];
       document.getElementById("selected-card").innerHTML = selectedCard.value + " of " + selectedCard.suit;
       document.getElementById("selected-card-img").src = selectedCard.image;
-      document.getElementById("select-button").innerText = "Select Another Card";
+      document.getElementById("select-button").disabled = true;
       document.getElementById("send-button").disabled = false;
-      console.log(selectedCard);
+      // console.log(selectedCard);
     }).catch(function () {
-      console.log("No Cards for you, Please re-shuffle");
+      document.getElementById("deviceID").innerHTML = "No Cards for you, Please re-shuffle";
     });
   }).catch(function () {
-    console.log("No Deck for you, Please re-shuffle");
+    document.getElementById("deviceID").innerHTML = "No Deck for you, Please re-shuffle";
   });
 }
 
@@ -59,14 +60,14 @@ function sendCard() {
 }
 
 function getActiveConnections() {
-  const options = {
-    method: 'GET',
-    mode: 'no-cors'
-  };
-  fetch(`http://${ws_server_api}/activeConnections`, options).then(function (response) {
-  console.log(response)  
-  return response.body ? response.body.json() : null;
+  fetch(`http://${ws_server_api}/activeConnections`).then(function (response) {
+    return response.text();
   }).then(function (data) {
-    console.log(data)
+    data = JSON.parse(data)
+    document.getElementById("list").innerHTML = ''
+    data.connections.forEach(function (connection) {
+      // console.log(connection.deviceID)
+      document.getElementById("list").innerHTML = document.getElementById("list").innerHTML + "<br>" + connection.deviceID.replace(';', '')
+    })
   })
 }

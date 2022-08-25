@@ -8,7 +8,9 @@
 
 <body>
   <div id="container">
-    Click to shuffle card and sent one via socket created
+    Click to select a random card and send it via websocket created
+    <br>
+    <p id="deviceID"></p>
     <br>
     <br>
     <button id="select-button" onClick="selectCard()">
@@ -27,6 +29,9 @@
     <button id="active-conn-button" onClick="getActiveConnections()">
       Get Active Connections
     </button>
+    <div id="active-conn-list">
+      <p id="list"></p>
+    </div>
   </div>
   <div id="loader-container">
     <div id="loader"></div>
