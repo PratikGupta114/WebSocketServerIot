@@ -1,0 +1,36 @@
+<html>
+
+<head>
+  <title>Websocket Testing</title>
+  <script type="text/javascript" src="./app.js"></script>
+  <link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+
+<body>
+  <div id="container">
+    Click to shuffle card and sent one via socket created
+    <br>
+    <br>
+    <button id="select-button" onClick="selectCard()">
+      Select Card
+    </button>
+
+    <p id="selected-card"></p>
+    <img id="selected-card-img">
+    <br>
+    <br>
+    <button id="send-button" onClick="sendCard()" disabled="true">
+      Send Card
+    </button>
+    <br>
+    <br>
+    <button id="active-conn-button" onClick="getActiveConnections()">
+      Get Active Connections
+    </button>
+  </div>
+  <div id="loader-container">
+    <div id="loader"></div>
+  </div>
+</body>
+
+</html>
