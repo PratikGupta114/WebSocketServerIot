@@ -9,19 +9,25 @@ import { activeConnections } from "./data/ConnectionsDataService";
 import { onWebSocketMessageHandler } from "./websockets/MessageHandlers";
 import { onPongReceiveHandler, onWebSocketCloseHandler, sendPings } from "./websockets/ConnectionControlHandlers";
 import { activeConnectionsRequestHandler, httpUpgradeHandler } from "./restApi/APIHandlers";
-
+import path = require("path");
 
 const app = express();
 const httpServer = createServer(app);
 const redisClient = createClient();
 
 app.get("/", (req, res) => {
-    res.status(200).send({
-        "message": "Hello World"
-    });
+    // res.status(200).send({
+    //     "message": "Hello World"
+    // });
+    res.status(200).sendFile(path.join(__dirname, '../', 'client-fe', 'index.html'))
 });
 
 app.get("/activeConnections", activeConnectionsRequestHandler);
+
+app.use(express.static(path.join(__dirname, '../', 'client-fe')))
+app.use('/home', (req, res, next) => {
+    res.status(200).sendFile(path.join(__dirname, '../', 'client-fe', 'index.html'))
+})
 
 httpServer.on("upgrade", httpUpgradeHandler);
 
