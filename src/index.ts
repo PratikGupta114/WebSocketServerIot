@@ -70,8 +70,9 @@ if (appConfiguration.buildType != "development") {
 
     setInterval(async () => {
         try {
+            console.log("Curernt web socket clients : ", webSocketServer.clients?.size);
             await updateWebsocketConnectionsMetricDescriptor(
-                webSocketServer.clients.size,
+                webSocketServer.clients?.size || 0,
                 appConfiguration.port
             );
             console.log("Successfully updated metric");
