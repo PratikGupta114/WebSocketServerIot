@@ -4,7 +4,7 @@ const card_get_api = "http://deckofcardsapi.com/api/deck/"
 const ws_server_api = "34.160.199.195:80"
 
 const deviceID_auto = Math.random().toString(16).substr(2, 8);
-let socket = new WebSocket(`ws://${ws_server_api}/echo?deviceID=${deviceID_auto};&pathName=test;&lastPongReceived=0;`);
+let socket = new WebSocket(`ws://${ws_server_api}/echo?deviceID=${deviceID_auto}`);
 
 socket.onopen = function (e) {
   document.getElementById("deviceID").innerHTML = "Device ID:" + deviceID_auto + ""
