@@ -59,13 +59,25 @@ setInterval(sendPings, appConfiguration.pingIntervalMillis);
 
 if (appConfiguration.buildType != "development") {
     // Once the server is up and runnning, make an attempt to create the metric
-    (async () => await createWebsocketConnectionsMetricDescriptor())();
+    console.log("Not running in development mode", appConfiguration.buildType);
+
+    try {
+        (async () => await createWebsocketConnectionsMetricDescriptor())();
+        console.log("Successfully created metric");
+    } catch (err) {
+        console.error(err);
+    }
 
     setInterval(async () => {
-        await updateWebsocketConnectionsMetricDescriptor(
-            webSocketServer.clients.size,
-            appConfiguration.port
-        );
+        try {
+            await updateWebsocketConnectionsMetricDescriptor(
+                webSocketServer.clients.size,
+                appConfiguration.port
+            );
+            console.log("Successfully updated metric");
+        } catch (error) {
+            console.error(error);
+        }
     }, appConfiguration.connectionMetricUpdateIntervalMillis);
 }
 
