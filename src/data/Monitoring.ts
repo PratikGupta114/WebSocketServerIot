@@ -75,11 +75,7 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
         points: [dataPoint],
     };
 
-    client.listMonitoredResourceDescriptors({
-
-    })
-
-    const request = {
+    const request: monitoring.protos.google.monitoring.v3.ICreateTimeSeriesRequest = {
         name: client.projectPath(appConfiguration.projectId),
         timeSeries: [timeSeriesData],
     };
