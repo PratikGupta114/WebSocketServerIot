@@ -1,6 +1,6 @@
 import * as monitoring from "@google-cloud/monitoring"
 import { appConfiguration } from "../config";
-import { Axios } from "axios";
+import axios from "axios";
 
 // Creates a client
 const client = new monitoring.MetricServiceClient();
@@ -104,17 +104,17 @@ export async function deleteWebSocketConnectionsMetricDescriptor() {
 const getMonitoredResourceForCurrentInstance = async () => {
 
     // Get the name
-    let res = await new Axios().get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } })
+    let res = await axios.get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } })
     const instanceName = String(res.data);
 
     console.log("Current Instance name : ", instanceName);
 
     // Get the instanceId
-    res = await new Axios().get(`${METADATA_URL_PREFIX}/id`, { headers: { "Metadata-Flavor": "Google" } })
+    res = await axios.get(`${METADATA_URL_PREFIX}/id`, { headers: { "Metadata-Flavor": "Google" } })
     const instanceId = String(res.data);
 
     // Get the zone name
-    res = await new Axios().get(`${METADATA_URL_PREFIX}/zone`, { headers: { "Metadata-Flavor": "Google" } })
+    res = await axios.get(`${METADATA_URL_PREFIX}/zone`, { headers: { "Metadata-Flavor": "Google" } })
     const parts = String(res.data).split("/");
     const zoneName = parts[parts.length - 1];
 
