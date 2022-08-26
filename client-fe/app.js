@@ -1,7 +1,9 @@
+// card deck api
 const card_dec_api = "http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
 const card_get_api = "http://deckofcardsapi.com/api/deck/"
-// const ws_server_api = "192.168.112:3001"
-const ws_server_api = "34.160.199.195:80"
+
+// get current api to connect to WS and get active connections
+const ws_server_api = (window.location.href).replace("http://", '').replace("/", '')
 
 const deviceID_auto = Math.random().toString(16).substr(2, 8);
 let socket = new WebSocket(`ws://${ws_server_api}/echo?deviceID=${deviceID_auto}`);
@@ -43,7 +45,6 @@ function selectCard() {
       document.getElementById("selected-card-img").src = selectedCard.image;
       document.getElementById("select-button").disabled = true;
       document.getElementById("send-button").disabled = false;
-      // console.log(selectedCard);
     }).catch(function () {
       document.getElementById("deviceID").innerHTML = "No Cards for you, Please re-shuffle";
     });
@@ -53,7 +54,6 @@ function selectCard() {
 }
 
 function sendCard() {
-  // alert("card sent " + selectedCard.code);
   socket.send(selectedCard.code);
   document.getElementById("send-button").disabled = true;
   selectedCard = null;
@@ -66,7 +66,6 @@ function getActiveConnections() {
     data = JSON.parse(data)
     document.getElementById("list").innerHTML = ''
     data.connections.forEach(function (connection) {
-      // console.log(connection.deviceID)
       document.getElementById("list").innerHTML = document.getElementById("list").innerHTML + "<br>" + connection.deviceID.replace(';', '')
     })
   })
