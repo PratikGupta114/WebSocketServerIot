@@ -17,7 +17,7 @@ export async function createWebsocketConnectionsMetricDescriptor() {
         metricDescriptor: {
             description: 'Total number of Websockets connections with the vm instance.',
             displayName: 'Web Socket Connections',
-            type: 'custom.googleapis.com/vm_instances/network/websocket_connections',
+            type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
             metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
             valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
             unit: '1',
@@ -60,14 +60,14 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
         name: client.projectPath(appConfiguration.projectId),
         timeSeries: [{
             metric: {
-                type: 'custom.googleapis.com/vm_instances/network/websocket_connections',
+                type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
                 labels: {
                     "ws_port": String(port),
                 },
             },
             metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
             valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
-            // resource: monitoredResource,
+            resource: monitoredResource,
             points: [{
                 interval: {
                     endTime: {
@@ -89,7 +89,7 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
 
 export async function deleteWebSocketConnectionsMetricDescriptor() {
 
-    const metricId = 'custom.googleapis.com/vm_instances/network/websocket_connections';
+    const metricId = 'custom.googleapis.com/vm_instances/network/connections/websockets';
     const request = {
         name: client.projectMetricDescriptorPath(appConfiguration.projectId, metricId),
     };
@@ -127,3 +127,21 @@ const getMonitoredResourceForCurrentInstance: () => Promise<monitoring.protos.go
         }
     };
 
+/**
+const monitoring = require('@google-cloud/monitoring');
+const client = new monitoring.MetricServiceClient();
+async function deleteWebSocketConnectionsMetricDescriptor() {
+
+    const metricId = 'custom.googleapis.com/vm_instances/network/websocket_connections';
+    const projectId = "teak-optics-359016";
+    const request = {
+        name: client.projectMetricDescriptorPath(projectId, metricId),
+    };
+    // Deletes a metric descriptor
+    const [result] = await client.deleteMetricDescriptor(request);
+    console.log(`Deleted ${metricId}`, result);
+}
+deleteWebSocketConnectionsMetricDescriptor().then(() => console.log("Deleted")).catch((error) => console.error(error));
+
+
+ */
