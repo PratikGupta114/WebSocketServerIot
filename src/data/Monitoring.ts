@@ -118,11 +118,11 @@ const getMonitoredResourceForCurrentInstance: () => Promise<monitoring.protos.go
         console.log("Instance name : ", instanceName, " | Instance ID : ", instanceId, " | Zone Name : ", zoneName, " | Project ID : ", appConfiguration.projectId);
 
         return {
-            type: "gce_instance",
+            type: "global",
             labels: {
                 "project_id": appConfiguration.projectId,
-                "instance_id": instanceId,
-                "zone": zoneName
+                // "instance_id": instanceId,
+                // "zone": zoneName
             }
         }
     };
