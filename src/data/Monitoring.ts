@@ -7,6 +7,8 @@ const client = new monitoring.MetricServiceClient();
 
 const METADATA_URL_PREFIX = "http://metadata.google.internal/computeMetadata/v1/instance/"
 
+const METRIC_IDENTIFIER = "custom.googleapis.com/vm_instance/network/total_websockets_connection"
+
 /**
  * TODO(developer): Uncomment and edit the following lines of code.
  */
@@ -16,8 +18,8 @@ export async function createWebsocketConnectionsMetricDescriptor() {
         name: client.projectPath(appConfiguration.projectId),
         metricDescriptor: {
             description: 'Total number of Websockets connections with the vm instance.',
-            displayName: 'Web Socket Connections',
-            type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
+            displayName: 'Total WebSocket Connections',
+            type: METRIC_IDENTIFIER,
             metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
             valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
             unit: '1',
@@ -60,7 +62,7 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
         name: client.projectPath(appConfiguration.projectId),
         timeSeries: [{
             metric: {
-                type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
+                type: METRIC_IDENTIFIER,
                 labels: {
                     "ws_port": String(port),
                 },
@@ -89,7 +91,7 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
 
 export async function deleteWebSocketConnectionsMetricDescriptor() {
 
-    const metricId = 'custom.googleapis.com/vm_instances/network/connections/websockets';
+    const metricId = METRIC_IDENTIFIER;
     const request = {
         name: client.projectMetricDescriptorPath(appConfiguration.projectId, metricId),
     };
@@ -99,7 +101,35 @@ export async function deleteWebSocketConnectionsMetricDescriptor() {
 }
 
 // https://cloud.google.com/compute/docs/metadata/querying-metadata
-const getMonitoredResourceForCurrentInstance: () => Promise<monitoring.protos.google.api.IMonitoredResource>
+export const getMonitoredResourceForCurrentInstance: () => Promise<monitoring.protos.google.api.IMonitoredResource>
+    = async () => {
+
+        // Get the name
+        // let res = await axios.get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } })
+        // const instanceName = String(res.data);
+
+        // Get the instanceId
+        // res = await axios.get(`${METADATA_URL_PREFIX}/id`, { headers: { "Metadata-Flavor": "Google" } })
+        // const instanceId = String(res.data);
+
+        // Get the zone name
+        // res = await axios.get(`${METADATA_URL_PREFIX}/zone`, { headers: { "Metadata-Flavor": "Google" } })
+        // const parts = String(res.data).split("/");
+        // const zoneName = parts[parts.length - 1];
+
+        // console.log("Instance name : ", instanceName, " | Instance ID : ", instanceId, " | Zone Name : ", zoneName, " | Project ID : ", appConfiguration.projectId);
+
+        return {
+            type: "global",
+            labels: {
+                "project_id": appConfiguration.projectId,
+                // "instance_id": instanceId,
+                // "zone": zoneName
+            }
+        }
+    };
+
+export const getInstanceNameIDAndZone: () => Promise<{ instanceName: string; instanceId: string; instanceZone: string }>
     = async () => {
 
         // Get the name
@@ -115,17 +145,13 @@ const getMonitoredResourceForCurrentInstance: () => Promise<monitoring.protos.go
         const parts = String(res.data).split("/");
         const zoneName = parts[parts.length - 1];
 
-        console.log("Instance name : ", instanceName, " | Instance ID : ", instanceId, " | Zone Name : ", zoneName, " | Project ID : ", appConfiguration.projectId);
-
         return {
-            type: "global",
-            labels: {
-                "project_id": appConfiguration.projectId,
-                // "instance_id": instanceId,
-                // "zone": zoneName
-            }
+            instanceName,
+            instanceId,
+            instanceZone: zoneName
         }
-    };
+
+    }
 
 /**
 const monitoring = require('@google-cloud/monitoring');

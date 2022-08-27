@@ -1,20 +1,47 @@
 import { createServer } from "http";
-import express, { request } from "express";
+import express from "express";
 import WebSocket from "ws";
-import { createClient } from "redis"
 
 import { appConfiguration } from "./config";
-import { MetaData } from "./data/Types";
 import { activeConnections } from "./data/ConnectionsDataService";
-import { onWebSocketMessageHandler } from "./websockets/MessageHandlers";
+import { createClient } from "redis";
+import { broadCastToLocalClients, onWebSocketMessageHandler } from "./websockets/MessageHandlers";
 import { onPongReceiveHandler, onWebSocketCloseHandler, sendPings } from "./websockets/ConnectionControlHandlers";
-import { activeConnectionsRequestHandler, httpUpgradeHandler } from "./restApi/APIHandlers";
+import { /* activeConnectionsRequestHandler ,*/ httpUpgradeHandler } from "./restApi/APIHandlers";
 import { createWebsocketConnectionsMetricDescriptor, updateWebsocketConnectionsMetricDescriptor } from "./data/Monitoring";
 import path = require("path");
+import { MetaData, tempMetaData } from "./data/Types";
 
 const app = express();
 const httpServer = createServer(app);
-const redisClient = createClient();
+
+
+export const client = createClient({
+    socket: {
+        host: appConfiguration.redisHost,
+        port: appConfiguration.redisPort
+    }
+});
+
+export const subscriber = client.duplicate();
+
+(async () => {
+    try {
+        client.on("error", (err) => {
+            console.error(`Error while connecting to redis cache : ${err}`);
+        });
+        await client.connect();
+        await subscriber.connect();
+
+        await subscriber.subscribe("broadcast", (message) => {
+            broadCastToLocalClients(message);
+        })
+
+    } catch (error) {
+        console.error(error);
+    }
+    console.log("Connected to Redis Sever with host : ", appConfiguration.redisHost, " and port : ", appConfiguration.redisPort);
+})();
 
 app.get("/", (req, res) => {
     // res.status(200).send({
@@ -23,7 +50,7 @@ app.get("/", (req, res) => {
     res.status(200).sendFile(path.join(__dirname, '../', 'client-fe', 'index.html'))
 });
 
-app.get("/activeConnections", activeConnectionsRequestHandler);
+// app.get("/activeConnections", activeConnectionsRequestHandler);
 
 app.use(express.static(path.join(__dirname, '../', 'client-fe')))
 app.use('/home', (req, res, next) => {
@@ -37,18 +64,19 @@ const webSocketServer = new WebSocket.Server({
 });
 
 webSocketServer.on("connection", (ws, request) => {
-    // extract the values from the request object
-    const metaData = (request as any).customMetaData as MetaData;
-    console.log(`On new connection with device : ${metaData.deviceID
-        } for path ${metaData.pathName
-        }`);
 
-    // If this works add the above three as metaData 
-    activeConnections.set(ws, metaData);
+    tempMetaData.subscribe((metaData) => {
+        console.log(`On new connection with device : ${metaData.deviceID
+            } for path ${metaData.pathName
+            }`);
 
-    ws.on("message", (data, isBinary) => onWebSocketMessageHandler(ws, data, isBinary));
-    ws.on("close", (code, number) => onWebSocketCloseHandler(ws, code, number));
-    ws.on("pong", (data: Buffer) => onPongReceiveHandler(ws, data));
+        // If this works add the above three as metaData 
+        activeConnections.set(ws, metaData);
+
+        ws.on("message", (data, isBinary) => onWebSocketMessageHandler(ws, data, isBinary));
+        ws.on("close", (code, number) => onWebSocketCloseHandler(ws, code, number));
+        ws.on("pong", (data: Buffer) => onPongReceiveHandler(ws, data));
+    })
 });
 
 httpServer.listen(appConfiguration.port, () => {
@@ -57,7 +85,7 @@ httpServer.listen(appConfiguration.port, () => {
 
 setInterval(sendPings, appConfiguration.pingIntervalMillis);
 
-if (appConfiguration.buildType != "development") {
+if (appConfiguration.buildType !== "development") {
     // Once the server is up and runnning, make an attempt to create the metric
     console.log("Not running in development mode", appConfiguration.buildType);
 
