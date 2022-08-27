@@ -1,8 +1,8 @@
 import WebSocket from "ws";
-import { client } from "..";
+import { client } from "../index";
 import { appConfiguration } from "../config";
 import { activeConnections } from "../data/ConnectionsDataService";
-import { MetaData } from "../data/Types";
+import { ClientConnectionRecord, MetaData } from "../data/Types";
 
 
 export const onWebSocketCloseHandler: (ws: WebSocket.WebSocket, code: number, reason: Buffer) => void = (ws, code, reason) => {
@@ -24,9 +24,15 @@ export const onPongReceiveHandler: (ws: WebSocket.WebSocket, data: Buffer) => vo
         return;
     }
     const metaData: MetaData = activeConnections.get(ws)!;
-
     metaData.lastPongReceived = new Date().getTime();
     activeConnections.set(ws, metaData);
+
+    (async () => {
+        const str = await client.get(metaData.deviceID!) as string;
+        const connectionRecord: ClientConnectionRecord = JSON.parse(str);
+        connectionRecord.lastPongReceived = metaData.lastPongReceived
+        await client.set(metaData.deviceID!, JSON.stringify(connectionRecord));
+    })();
 
 };
 

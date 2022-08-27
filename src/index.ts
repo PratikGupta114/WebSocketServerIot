@@ -116,7 +116,8 @@ const httpUpgradeHandler = async (request: IncomingMessage, socket: internal.Dup
         let connectionRecord: ClientConnectionRecord = {
             instanceID: "NA",
             instanceName: "NA",
-            connectedPath: pathName
+            connectedPath: pathName,
+            lastPongReceived: new Date().getTime(),
         };
 
         if (appConfiguration.buildType !== "development") {
@@ -130,6 +131,30 @@ const httpUpgradeHandler = async (request: IncomingMessage, socket: internal.Dup
         // Now that we have the object ready, push it to the redis cache
         await client.set(deviceID!, JSON.stringify(connectionRecord));
     }
+
+    // request.push({
+    //     pathName: pathName as string,
+    //     deviceID: deviceID as string,
+    //     lastPongReceived: (new Date().getTime()),
+    // });
+
+    // Object.assign(request, {
+    //     pathName: pathName as string,
+    //     deviceID: deviceID as string,
+    //     lastPongReceived: (new Date().getTime()),
+    // });
+
+    // TempMetaDataCls.deviceID = deviceID as string;
+    // TempMetaDataCls.pathName = pathName as string;
+    // TempMetaDataCls.lastPongReceived = new Date().getTime();
+
+    // connection accepted, pass the information to the next callback.
+    // tempMetaData.next({
+    //     pathName: pathName as string,
+    //     deviceID: deviceID as string,
+    //     lastPongReceived: (new Date().getTime()),
+    // });
+
 }
 
 httpServer.on("upgrade", httpUpgradeHandler);
