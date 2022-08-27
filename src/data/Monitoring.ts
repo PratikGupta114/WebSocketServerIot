@@ -67,7 +67,7 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
             },
             metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
             valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
-            resource: monitoredResource,
+            // resource: monitoredResource,
             points: [{
                 interval: {
                     endTime: {
