@@ -1,20 +1,15 @@
-import { createServer } from "http";
 import express from "express";
-import WebSocket from "ws";
-
-import { IncomingMessage } from "http";
+import { createServer, IncomingMessage } from "http";
+import { createClient } from "redis";
 import internal from "stream";
-
+import WebSocket from "ws";
 import { appConfiguration } from "./config";
 import { activeConnections } from "./data/ConnectionsDataService";
-import { createClient } from "redis";
-import { broadCastToLocalClients, onWebSocketMessageHandler } from "./websockets/MessageHandlers";
-import { onPongReceiveHandler, onWebSocketCloseHandler, sendPings } from "./websockets/ConnectionControlHandlers";
-import { /* activeConnectionsRequestHandler ,*/ } from "./restApi/APIHandlers";
 import { createWebsocketConnectionsMetricDescriptor, getInstanceNameIDAndZone, updateWebsocketConnectionsMetricDescriptor } from "./data/Monitoring";
+import { ClientConnectionRecord, MetaData } from "./data/Types";
+import { onPongReceiveHandler, onWebSocketCloseHandler, sendPings } from "./websockets/ConnectionControlHandlers";
+import { broadCastToLocalClients, onWebSocketMessageHandler } from "./websockets/MessageHandlers";
 import path = require("path");
-import { ClientConnectionRecord, MetaData, tempMetaData, TempMetaDataCls } from "./data/Types";
-import { take, takeLast } from "rxjs";
 
 const app = express();
 const httpServer = createServer(app);
@@ -135,30 +130,6 @@ const httpUpgradeHandler = async (request: IncomingMessage, socket: internal.Dup
         // Now that we have the object ready, push it to the redis cache
         await client.set(deviceID!, JSON.stringify(connectionRecord));
     }
-
-    // request.push({
-    //     pathName: pathName as string,
-    //     deviceID: deviceID as string,
-    //     lastPongReceived: (new Date().getTime()),
-    // });
-
-    // Object.assign(request, {
-    //     pathName: pathName as string,
-    //     deviceID: deviceID as string,
-    //     lastPongReceived: (new Date().getTime()),
-    // });
-
-    // TempMetaDataCls.deviceID = deviceID as string;
-    // TempMetaDataCls.pathName = pathName as string;
-    // TempMetaDataCls.lastPongReceived = new Date().getTime();
-
-    // connection accepted, pass the information to the next callback.
-    // tempMetaData.next({
-    //     pathName: pathName as string,
-    //     deviceID: deviceID as string,
-    //     lastPongReceived: (new Date().getTime()),
-    // });
-
 }
 
 httpServer.on("upgrade", httpUpgradeHandler);
@@ -173,13 +144,7 @@ const validPaths = [
     "/record"
 ];
 
-
-
 webSocketServer.on("connection", (ws, request) => {
-
-    // console.log("on new connection");
-
-    // tempMetaData.pipe(takeLast(2)).subscribe((metaData) => {
 
     const metaData: MetaData = {
         lastPongReceived: TempMetaData.lastPongReceived,
@@ -200,7 +165,6 @@ webSocketServer.on("connection", (ws, request) => {
     ws.on("message", (data, isBinary) => onWebSocketMessageHandler(ws, data, isBinary));
     ws.on("close", (code, number) => onWebSocketCloseHandler(ws, code, number));
     ws.on("pong", (data: Buffer) => onPongReceiveHandler(ws, data));
-    // });
 });
 
 httpServer.listen(appConfiguration.port, () => {
