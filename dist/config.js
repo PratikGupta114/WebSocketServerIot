@@ -32,11 +32,17 @@ const DEFAULT_CERTIFICATE_FILE_PATH = "./certs/cert.pem";
 const DEFAULT_DATA_DIRECTORY_PATH = "./Data";
 const DEFAULT_PING_INTERVAL_DURATION_MILLIS = 500;
 const DEFAULT_CONNECTION_TIMEOUT_DURATION_MILLIS = 2000;
+const DEFAULT_WEBSOCKET_CONNECTION_METRIC_UPDATE_INTERVAL_MILLIS = 60000;
 const DEFAULT_PORT = 3001;
 const DEFAULT_HOST = "192.168.1.107";
+const DEFAULT_REDIS_PORT = 6379;
+const DEFAULT_REDIS_HOST = "192.168.1.107";
 const buildType = String(process.env.NODE_ENV || "development");
 const port = Number(process.env.PORT) || DEFAULT_PORT;
 const host = String(process.env.HOST || DEFAULT_HOST);
+const projectId = String(process.env.PROJECT_ID || "");
+const redisPort = Number(process.env.REDIS_PORT) || DEFAULT_REDIS_PORT;
+const redisHost = String(process.env.REDIS_HOST) || DEFAULT_REDIS_HOST;
 const pingIntervalMillis = Number(process.env.PING_INTERVAL_DURATION_MILLIS)
     || DEFAULT_PING_INTERVAL_DURATION_MILLIS;
 const connectionTimeoutDurationMillis = Number(process.env.CONNECTION_TIMEOUT_DURATION_MILLIS)
@@ -47,13 +53,18 @@ const certificateFilePath = String(process.env.CERTIFICATE_FILE_PATH
     || DEFAULT_CERTIFICATE_FILE_PATH);
 const dataDirectoryPath = String(process.env.DATA_DIRECTORY_PATH
     || DEFAULT_DATA_DIRECTORY_PATH);
+const websocketConnectionsMetricUpdateInterval = Number(process.env.WEBSOCKET_CONNECTION_METRIC_UPDATE_INTERVAL_MILLIS) || DEFAULT_WEBSOCKET_CONNECTION_METRIC_UPDATE_INTERVAL_MILLIS;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 exports.appConfiguration = {
+    projectId,
     buildType,
     host,
     port,
     pingIntervalMillis,
     connectionTimeoutDurationMillis,
+    connectionMetricUpdateIntervalMillis: websocketConnectionsMetricUpdateInterval,
+    redisHost,
+    redisPort,
     filePaths: {
         privateKey: privateKeyFilePath,
         certificate: certificateFilePath,

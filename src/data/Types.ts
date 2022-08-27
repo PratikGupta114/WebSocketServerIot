@@ -18,4 +18,10 @@ export const tempMetaData = new BehaviorSubject<MetaData>({
     deviceID: "defg"
 });
 
+export class TempMetaDataCls {
+    static deviceID: string;
+    static pathName: string;
+    static lastPongReceived: number;
+}
+
 export type LogLevel = 'E' | 'W' | 'I' | 'D' | 'V';
