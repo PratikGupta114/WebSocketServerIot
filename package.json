@@ -8,8 +8,7 @@
     "build": "tsc",
     "start": "npx ts-node src/index.ts",
     "dev": "nodemon",
-    "production": "node dist/index.js",
-    "deploy:loc" : "firebase deploy --only hosting"
+    "production": "node dist/index.js"
   },
   "author": "HyperDrive",
   "license": "ISC",
@@ -20,7 +19,6 @@
     "axios": "^0.27.2",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
-    "firebase": "^9.9.3",
     "node-fetch": "^3.2.10",
     "nodemon": "^2.0.19",
     "redis": "^4.2.0",
