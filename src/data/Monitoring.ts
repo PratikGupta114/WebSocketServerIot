@@ -18,14 +18,15 @@ export async function createWebsocketConnectionsMetricDescriptor() {
             description: 'Total number of Websockets connections with the vm instance.',
             displayName: 'Web Socket Connections',
             type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
-            metricKind: 'GAUGE',
-            valueType: "INT64",
+            metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
+            valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
             unit: '1',
+            launchStage: monitoring.protos.google.api.LaunchStage.ALPHA,
             labels: [
                 {
                     "key": 'ws_port',
-                    "valueType": "INT64",
-                    "description": 'Port number of the server on which the websocket server is running',
+                    "valueType": "STRING",
+                    "description": 'Port number of the instance on which the websocket server is running',
                 },
             ],
         },
@@ -52,32 +53,33 @@ export async function createWebsocketConnectionsMetricDescriptor() {
 
 export async function updateWebsocketConnectionsMetricDescriptor(connections: number, port: number | string) {
 
-    const dataPoint = {
-        interval: {
-            endTime: {
-                seconds: (Date.now() / 1000),
-            },
-        },
-        value: {
-            int64Value: connections,
-        },
-    };
 
     const monitoredResource = await getMonitoredResourceForCurrentInstance();
-    const timeSeriesData = {
-        metric: {
-            type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
-            labels: {
-                "ws_port": String(port),
-            },
-        },
-        resource: monitoredResource,
-        points: [dataPoint],
-    };
 
     const request: monitoring.protos.google.monitoring.v3.ICreateTimeSeriesRequest = {
         name: client.projectPath(appConfiguration.projectId),
-        timeSeries: [timeSeriesData],
+        timeSeries: [{
+            metric: {
+                type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
+                labels: {
+                    "ws_port": String(port),
+                },
+            },
+            metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
+            valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
+            resource: monitoredResource,
+            points: [{
+                interval: {
+                    endTime: {
+                        seconds: (Date.now() / 1000),
+                    },
+                },
+                value: {
+                    int64Value: connections,
+                },
+            }],
+            unit: "1"
+        }],
     };
 
     // Writes time series data
@@ -97,30 +99,31 @@ export async function deleteWebSocketConnectionsMetricDescriptor() {
 }
 
 // https://cloud.google.com/compute/docs/metadata/querying-metadata
-const getMonitoredResourceForCurrentInstance = async () => {
+const getMonitoredResourceForCurrentInstance: () => Promise<monitoring.protos.google.api.IMonitoredResource>
+    = async () => {
 
-    // Get the name
-    let res = await axios.get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } })
-    const instanceName = String(res.data);
+        // Get the name
+        let res = await axios.get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } })
+        const instanceName = String(res.data);
 
-    console.log("Current Instance name : ", instanceName);
+        // Get the instanceId
+        res = await axios.get(`${METADATA_URL_PREFIX}/id`, { headers: { "Metadata-Flavor": "Google" } })
+        const instanceId = String(res.data);
 
-    // Get the instanceId
-    res = await axios.get(`${METADATA_URL_PREFIX}/id`, { headers: { "Metadata-Flavor": "Google" } })
-    const instanceId = String(res.data);
+        // Get the zone name
+        res = await axios.get(`${METADATA_URL_PREFIX}/zone`, { headers: { "Metadata-Flavor": "Google" } })
+        const parts = String(res.data).split("/");
+        const zoneName = parts[parts.length - 1];
 
-    // Get the zone name
-    res = await axios.get(`${METADATA_URL_PREFIX}/zone`, { headers: { "Metadata-Flavor": "Google" } })
-    const parts = String(res.data).split("/");
-    const zoneName = parts[parts.length - 1];
+        console.log("Instance name : ", instanceName, " | Instance ID : ", instanceId, " | Zone Name : ", zoneName, " | Project ID : ", appConfiguration.projectId);
 
-    return {
-        "type": "gce_instance",
-        "labels": {
-            "project_id": appConfiguration.projectId,
-            "instance_id": instanceId,
-            "zone": zoneName
+        return {
+            type: "gce_instance",
+            labels: {
+                "project_id": appConfiguration.projectId,
+                "instance_id": instanceId,
+                "zone": zoneName
+            }
         }
-    }
-};
+    };
 
