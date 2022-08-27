@@ -30,8 +30,10 @@ export const onPongReceiveHandler: (ws: WebSocket.WebSocket, data: Buffer) => vo
     (async () => {
         const str = await client.get(metaData.deviceID!) as string;
         const connectionRecord: ClientConnectionRecord = JSON.parse(str);
-        connectionRecord.lastPongReceived = metaData.lastPongReceived
-        await client.set(metaData.deviceID!, JSON.stringify(connectionRecord));
+        if (connectionRecord) {
+            connectionRecord.lastPongReceived = metaData.lastPongReceived
+            await client.set(metaData.deviceID!, JSON.stringify(connectionRecord));
+        }
     })();
 
 };
