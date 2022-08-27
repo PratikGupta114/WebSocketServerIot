@@ -1,20 +1,24 @@
-import { createServer } from "http";
 import express from "express";
+import { createServer, IncomingMessage } from "http";
+import { createClient } from "redis";
+import internal from "stream";
 import WebSocket from "ws";
-
 import { appConfiguration } from "./config";
 import { activeConnections } from "./data/ConnectionsDataService";
-import { createClient } from "redis";
-import { broadCastToLocalClients, onWebSocketMessageHandler } from "./websockets/MessageHandlers";
+import { createWebsocketConnectionsMetricDescriptor, getInstanceNameIDAndZone, updateWebsocketConnectionsMetricDescriptor } from "./data/Monitoring";
+import { ClientConnectionRecord, MetaData } from "./data/Types";
 import { onPongReceiveHandler, onWebSocketCloseHandler, sendPings } from "./websockets/ConnectionControlHandlers";
-import { /* activeConnectionsRequestHandler ,*/ httpUpgradeHandler } from "./restApi/APIHandlers";
-import { createWebsocketConnectionsMetricDescriptor, updateWebsocketConnectionsMetricDescriptor } from "./data/Monitoring";
+import { broadCastToLocalClients, onWebSocketMessageHandler } from "./websockets/MessageHandlers";
 import path = require("path");
-import { MetaData, tempMetaData } from "./data/Types";
 
 const app = express();
 const httpServer = createServer(app);
 
+var TempMetaData: MetaData = {
+    lastPongReceived: 0,
+    pathName: "",
+    deviceID: ""
+};
 
 export const client = createClient({
     socket: {
@@ -57,26 +61,110 @@ app.use('/home', (req, res, next) => {
     res.status(200).sendFile(path.join(__dirname, '../', 'client-fe', 'index.html'))
 })
 
+// courtesy - https://github.com/websockets/ws/issues/517#issuecomment-134994157
+const httpUpgradeHandler = async (request: IncomingMessage, socket: internal.Duplex) => {
+
+    // This is a small hack to reconstruct the websocket url since the request.url 
+    const url = new URL(`wss://${appConfiguration.host}:${appConfiguration.port}${request.url}`);
+    const params = url.searchParams;
+    const pathName = url.pathname;
+    const deviceID = params.get("deviceID");
+
+    console.log(`Upgrade request from ${deviceID} for ${pathName}`);
+
+    // Validate the deviceID, macID and the pathName 
+    if (!deviceID || !validPaths.includes(pathName)) {
+        console.error("Connection request denied due to lack of meta data");
+        socket.destroy();
+    }
+
+    TempMetaData = {
+        deviceID: deviceID as string,
+        lastPongReceived: new Date().getTime(),
+        pathName: pathName as string,
+    };
+
+    // Check if a device with the same macID is already connected.
+
+    // Below is the Old Approach for checking connected devices
+    // for (const metaData of activeConnections.values()) {
+    //     if (metaData.deviceID === deviceID) {
+    //         console.error("Device with ID :", deviceID, " is already connected");
+    //         socket.destroy();
+    //         return;
+    //     }
+    // }
+
+    // New Approach
+    // const connectionRecord: ClientConnectionRecord = JSON.parse(client.get(`${deviceID}`));
+
+    let str = await client.get(deviceID!);
+
+    if (str) {
+
+        let connectionRecord: ClientConnectionRecord = JSON.parse(str);
+        if (connectionRecord) {
+            console.error("Device with ID :", deviceID, " is already connected");
+            socket.destroy();
+            return;
+        }
+
+    } else {
+        console.log("Connection record does not exist hence creating record");
+        // connectionRecord object is null fetch the instance name and instance ID
+
+        let connectionRecord: ClientConnectionRecord = {
+            instanceID: "NA",
+            instanceName: "NA",
+            connectedPath: pathName
+        };
+
+        if (appConfiguration.buildType !== "development") {
+            // fetch the instance name and id from the function
+            const { instanceId, instanceName } = await getInstanceNameIDAndZone();
+            // Since the object is null, hence create the object
+            connectionRecord.instanceID = instanceId;
+            connectionRecord.instanceName = instanceName;
+        }
+
+        // Now that we have the object ready, push it to the redis cache
+        await client.set(deviceID!, JSON.stringify(connectionRecord));
+    }
+}
+
 httpServer.on("upgrade", httpUpgradeHandler);
 
 const webSocketServer = new WebSocket.Server({
     server: httpServer
 });
 
+const validPaths = [
+    "/echo",
+    "/post",
+    "/record"
+];
+
 webSocketServer.on("connection", (ws, request) => {
 
-    tempMetaData.subscribe((metaData) => {
-        console.log(`On new connection with device : ${metaData.deviceID
-            } for path ${metaData.pathName
-            }`);
+    const metaData: MetaData = {
+        lastPongReceived: TempMetaData.lastPongReceived,
+        pathName: TempMetaData.pathName,
+        deviceID: TempMetaData.deviceID,
+    };
 
-        // If this works add the above three as metaData 
-        activeConnections.set(ws, metaData);
+    console.log(`On new connection with device : ${metaData.deviceID} for path ${metaData.pathName}`);
+    const tempData = JSON.parse(JSON.stringify(metaData));
+    console.log(tempData);
+    // If this works add the above three as metaData 
+    activeConnections.set(ws, tempData);
 
-        ws.on("message", (data, isBinary) => onWebSocketMessageHandler(ws, data, isBinary));
-        ws.on("close", (code, number) => onWebSocketCloseHandler(ws, code, number));
-        ws.on("pong", (data: Buffer) => onPongReceiveHandler(ws, data));
-    })
+    TempMetaData.deviceID = "";
+    TempMetaData.pathName = "";
+    TempMetaData.lastPongReceived = 0;
+
+    ws.on("message", (data, isBinary) => onWebSocketMessageHandler(ws, data, isBinary));
+    ws.on("close", (code, number) => onWebSocketCloseHandler(ws, code, number));
+    ws.on("pong", (data: Buffer) => onPongReceiveHandler(ws, data));
 });
 
 httpServer.listen(appConfiguration.port, () => {
