@@ -17,7 +17,7 @@ export async function createWebsocketConnectionsMetricDescriptor() {
         metricDescriptor: {
             description: 'Total number of Websockets connections with the vm instance.',
             displayName: 'Web Socket Connections',
-            type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
+            type: 'custom.googleapis.com/vm_instances/network/websocket_connections',
             metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
             valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
             unit: '1',
@@ -60,7 +60,7 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
         name: client.projectPath(appConfiguration.projectId),
         timeSeries: [{
             metric: {
-                type: 'custom.googleapis.com/vm_instances/network/connections/websockets',
+                type: 'custom.googleapis.com/vm_instances/network/websocket_connections',
                 labels: {
                     "ws_port": String(port),
                 },
@@ -89,7 +89,7 @@ export async function updateWebsocketConnectionsMetricDescriptor(connections: nu
 
 export async function deleteWebSocketConnectionsMetricDescriptor() {
 
-    const metricId = 'custom.googleapis.com/vm_instances/network/connections/websockets';
+    const metricId = 'custom.googleapis.com/vm_instances/network/websocket_connections';
     const request = {
         name: client.projectMetricDescriptorPath(appConfiguration.projectId, metricId),
     };
