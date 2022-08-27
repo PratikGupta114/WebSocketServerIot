@@ -9,6 +9,7 @@ import { activeConnections } from "./data/ConnectionsDataService";
 import { onWebSocketMessageHandler } from "./websockets/MessageHandlers";
 import { onPongReceiveHandler, onWebSocketCloseHandler, sendPings } from "./websockets/ConnectionControlHandlers";
 import { activeConnectionsRequestHandler, httpUpgradeHandler } from "./restApi/APIHandlers";
+import { createWebsocketConnectionsMetricDescriptor, updateWebsocketConnectionsMetricDescriptor } from "./data/Monitoring";
 import path = require("path");
 
 const app = express();
@@ -55,3 +56,30 @@ httpServer.listen(appConfiguration.port, () => {
 });
 
 setInterval(sendPings, appConfiguration.pingIntervalMillis);
+
+if (appConfiguration.buildType != "development") {
+    // Once the server is up and runnning, make an attempt to create the metric
+    console.log("Not running in development mode", appConfiguration.buildType);
+
+    try {
+        (async () => await createWebsocketConnectionsMetricDescriptor())();
+        console.log("Successfully created metric");
+    } catch (err) {
+        console.error(err);
+    }
+
+    setInterval(async () => {
+        try {
+            console.log("Curernt web socket clients : ", webSocketServer.clients?.size);
+            await updateWebsocketConnectionsMetricDescriptor(
+                webSocketServer.clients?.size || 0,
+                appConfiguration.port
+            );
+            console.log("Successfully updated metric");
+        } catch (error) {
+            console.error(error);
+        }
+    }, appConfiguration.connectionMetricUpdateIntervalMillis);
+}
+
+

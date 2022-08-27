@@ -25,7 +25,11 @@ export const onWebSocketMessageHandler: (ws: WebSocket.WebSocket, message: WebSo
 
     if (metaData.pathName == "/echo") {
         // Echo server, send the data back to the client
-        ws.send(stringMessage, { binary: false });
+        if (stringMessage === "jinne mera dil luteya" || stringMessage === "jinne menu maar suteya") {
+            ws.send("Ohho", { binary: false });
+        } else {
+            ws.send(stringMessage, { binary: false });
+        }
     }
     else if (metaData.pathName == "/post") {
 
