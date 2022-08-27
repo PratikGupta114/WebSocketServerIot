@@ -13,8 +13,10 @@ const DEFAULT_CONNECTION_TIMEOUT_DURATION_MILLIS = 2000;
 const DEFAULT_WEBSOCKET_CONNECTION_METRIC_UPDATE_INTERVAL_MILLIS = 60000
 
 const DEFAULT_PORT = 3001;
-const DEFAULT_REDIS_PORT = 6379;
 const DEFAULT_HOST = "192.168.1.107";
+
+const DEFAULT_REDIS_PORT = 6379;
+const DEFAULT_REDIS_HOST = "192.168.1.107";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +33,7 @@ export type AppConfiguration = {
     buildType: BuildType;
     host: string | undefined;
     port: number;
+    redisHost: string;
     redisPort: number;
     filePaths: FilePathsType;
     pingIntervalMillis: number;
@@ -44,6 +47,7 @@ const port: number = Number(process.env.PORT) || DEFAULT_PORT;
 const host: string = String(process.env.HOST || DEFAULT_HOST);
 const projectId: string = String(process.env.PROJECT_ID || "");
 const redisPort: number = Number(process.env.REDIS_PORT) || DEFAULT_REDIS_PORT;
+const redisHost: string = String(process.env.REDIS_HOST) || DEFAULT_REDIS_HOST;
 
 const pingIntervalMillis: number = Number(process.env.PING_INTERVAL_DURATION_MILLIS)
     || DEFAULT_PING_INTERVAL_DURATION_MILLIS;
@@ -70,6 +74,7 @@ export const appConfiguration: AppConfiguration = {
     pingIntervalMillis,
     connectionTimeoutDurationMillis,
     connectionMetricUpdateIntervalMillis: websocketConnectionsMetricUpdateInterval,
+    redisHost,
     redisPort,
     filePaths: {
         privateKey: privateKeyFilePath,

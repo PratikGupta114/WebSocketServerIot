@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+import { client } from "..";
 import { appConfiguration } from "../config";
 import { activeConnections } from "../data/ConnectionsDataService";
 import { MetaData } from "../data/Types";
@@ -9,6 +10,8 @@ export const onWebSocketCloseHandler: (ws: WebSocket.WebSocket, code: number, re
     if (!!metaData) {
         console.log(`Device : ${metaData.deviceID} has been disconnected.Code : ${code} } reason: ${reason} `);
         activeConnections.delete(ws);
+        // remove the data from the redis cache
+        (async () => await client.del(metaData.deviceID))();
     }
 };
 

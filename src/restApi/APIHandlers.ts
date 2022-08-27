@@ -1,10 +1,12 @@
 
-import express from "express"
+
 import { IncomingMessage } from "http";
 import internal from "stream";
-import { activeConnections } from "../data/ConnectionsDataService"
-import { MetaData } from "../data/Types"
+import { client } from "../index"
+import { ClientConnectionRecord } from "../data/Types"
 import { appConfiguration } from "../config";
+import { getInstanceNameIDAndZone } from "../data/Monitoring";
+import { tempMetaData } from "../data/Types";
 
 const validPaths = [
     "/echo",
@@ -13,7 +15,7 @@ const validPaths = [
 ];
 
 // courtesy - https://github.com/websockets/ws/issues/517#issuecomment-134994157
-export const httpUpgradeHandler = (request: IncomingMessage, socket: internal.Duplex) => {
+export const httpUpgradeHandler = async (request: IncomingMessage, socket: internal.Duplex) => {
 
     // This is a small hack to reconstruct the websocket url since the request.url 
     const url = new URL(`wss://${appConfiguration.host}:${appConfiguration.port}${request.url}`);
@@ -30,51 +32,93 @@ export const httpUpgradeHandler = (request: IncomingMessage, socket: internal.Du
     }
 
     // Check if a device with the same macID is already connected.
-    for (const metaData of activeConnections.values()) {
-        if (metaData.deviceID === deviceID) {
+
+    // Below is the Old Approach for checking connected devices
+    // for (const metaData of activeConnections.values()) {
+    //     if (metaData.deviceID === deviceID) {
+    //         console.error("Device with ID :", deviceID, " is already connected");
+    //         socket.destroy();
+    //         return;
+    //     }
+    // }
+
+    // New Approach
+    // const connectionRecord: ClientConnectionRecord = JSON.parse(client.get(`${deviceID}`));
+
+    let str = await client.get(deviceID!);
+    if (str) {
+
+        let connectionRecord: ClientConnectionRecord = JSON.parse(str);
+        if (connectionRecord) {
             console.error("Device with ID :", deviceID, " is already connected");
             socket.destroy();
             return;
         }
+
+    } else {
+        console.log("Connection record does not exist hence creating record");
+        // connectionRecord object is null fetch the instance name and instance ID
+
+        let connectionRecord: ClientConnectionRecord = {
+            instanceID: "NA",
+            instanceName: "NA",
+            connectedPath: pathName
+        };
+
+        if (appConfiguration.buildType !== "development") {
+            // fetch the instance name and id from the function
+            const { instanceId, instanceName } = await getInstanceNameIDAndZone();
+            // Since the object is null, hence create the object
+            connectionRecord.instanceID = instanceId;
+            connectionRecord.instanceName = instanceName;
+        }
+
+        // Now that we have the object ready, push it to the redis cache
+        await client.set(deviceID!, JSON.stringify(connectionRecord));
     }
 
     // connection accepted, pass the information to the next callback.
-    const metaData: MetaData = {
+    tempMetaData.next({
         pathName: pathName as string,
         deviceID: deviceID as string,
         lastPongReceived: (new Date().getTime()),
-    };
-    (request as any).customMetaData = metaData;
+    });
+
 }
 
-export const activeConnectionsRequestHandler = (req: express.Request, res: express.Response) => {
+// export const activeConnectionsRequestHandler = (req: express.Request, res: express.Response) => {
 
-    const connections = [...activeConnections.keys()];
+//     res.status(200).send({
+//         "message": "Use the monitoring server for getting the active connections",
+//     });
+//     return;
 
-    if (connections.length <= 0) {
-        res.status(200).send({
-            "message": "No active connections yet",
-            "count": 0,
-            "connections": undefined
-        });
-        return;
-    }
+//     const connections = [...activeConnections.keys()];
 
-    const connectionList = [];
+//     if (connections.length <= 0) {
+//         res.status(200).send({
+//             "message": "No active connections yet",
+//             "count": 0,
+//             "connections": undefined
+//         });
+//         return;
+//     }
 
-    for (const connection of connections) {
-        const metaData = activeConnections.get(connection);
-        connectionList.push({
-            ...metaData,
-            url: connection.url
-        });
-    }
+//     const connectionList = [];
 
-    res.header('access-control-allow-origin', '*')
-    res.status(200).send({
-        "message": "Connections fetch success",
-        "count": connectionList.length,
-        "connections": connectionList
-    });
-    return;
-};
+//     for (const connection of connections) {
+//         const metaData = activeConnections.get(connection);
+//         connectionList.push({
+//             ...metaData,
+//             url: connection.url
+//         });
+//     }
+
+//     res.header('access-control-allow-origin', '*')
+//     res.status(200).send({
+//         "message": "Connections fetch success",
+//         "count": connectionList.length,
+//         "connections": connectionList
+//     });
+//     return;
+// };

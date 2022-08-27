@@ -39,3 +39,9 @@ export const onWebSocketMessageHandler: (ws: WebSocket.WebSocket, message: WebSo
     }
 
 };
+
+export const broadCastToLocalClients: (message: string) => void = (message) => {
+    [...activeConnections.keys()].forEach(ws => {
+        ws.send(message, { binary: false });
+    })
+}
