@@ -1,6 +1,7 @@
 // card deck api
 const card_dec_api = "http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
 const card_get_api = "http://deckofcardsapi.com/api/deck/"
+const monitoring_api = "http://34.100.234.252:3001/activeConnections"
 
 // get current api to connect to WS and get active connections
 const ws_server_api = (window.location.href).replace("http://", '').replace("/", '')
@@ -60,7 +61,7 @@ function sendCard() {
 }
 
 function getActiveConnections() {
-  fetch(`http://${ws_server_api}/activeConnections`).then(function (response) {
+  fetch(monitoring_api).then(function (response) {
     return response.text();
   }).then(function (data) {
     data = JSON.parse(data)
