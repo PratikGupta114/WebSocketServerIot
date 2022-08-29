@@ -2,7 +2,7 @@ import express from "express";
 import { createServer, IncomingMessage } from "http";
 import { createClient } from "redis";
 import internal from "stream";
-import WebSocket from "ws";
+import { WebSocket } from "ws";
 import { appConfiguration } from "./config";
 import { activeConnections } from "./data/ConnectionsDataService";
 import { createWebsocketConnectionsMetricDescriptor, getInstanceNameIDAndZone, updateWebsocketConnectionsMetricDescriptor } from "./data/Monitoring";
@@ -48,13 +48,8 @@ export const subscriber = client.duplicate();
 })();
 
 app.get("/", (req, res) => {
-    // res.status(200).send({
-    //     "message": "Hello World"
-    // });
     res.status(200).sendFile(path.join(__dirname, '../', 'client-fe', 'index.html'))
 });
-
-// app.get("/activeConnections", activeConnectionsRequestHandler);
 
 app.use(express.static(path.join(__dirname, '../', 'client-fe')))
 app.use('/home', (req, res, next) => {
@@ -83,20 +78,6 @@ const httpUpgradeHandler = async (request: IncomingMessage, socket: internal.Dup
         lastPongReceived: new Date().getTime(),
         pathName: pathName as string,
     };
-
-    // Check if a device with the same macID is already connected.
-
-    // Below is the Old Approach for checking connected devices
-    // for (const metaData of activeConnections.values()) {
-    //     if (metaData.deviceID === deviceID) {
-    //         console.error("Device with ID :", deviceID, " is already connected");
-    //         socket.destroy();
-    //         return;
-    //     }
-    // }
-
-    // New Approach
-    // const connectionRecord: ClientConnectionRecord = JSON.parse(client.get(`${deviceID}`));
 
     let str = await client.get(deviceID!);
 
@@ -131,30 +112,6 @@ const httpUpgradeHandler = async (request: IncomingMessage, socket: internal.Dup
         // Now that we have the object ready, push it to the redis cache
         await client.set(deviceID!, JSON.stringify(connectionRecord));
     }
-
-    // request.push({
-    //     pathName: pathName as string,
-    //     deviceID: deviceID as string,
-    //     lastPongReceived: (new Date().getTime()),
-    // });
-
-    // Object.assign(request, {
-    //     pathName: pathName as string,
-    //     deviceID: deviceID as string,
-    //     lastPongReceived: (new Date().getTime()),
-    // });
-
-    // TempMetaDataCls.deviceID = deviceID as string;
-    // TempMetaDataCls.pathName = pathName as string;
-    // TempMetaDataCls.lastPongReceived = new Date().getTime();
-
-    // connection accepted, pass the information to the next callback.
-    // tempMetaData.next({
-    //     pathName: pathName as string,
-    //     deviceID: deviceID as string,
-    //     lastPongReceived: (new Date().getTime()),
-    // });
-
 }
 
 httpServer.on("upgrade", httpUpgradeHandler);

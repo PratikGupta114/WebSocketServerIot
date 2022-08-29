@@ -12,7 +12,7 @@ const onWebSocketMessageHandler = (ws, message, isBinary) => {
     }
     const buffer = new Uint8Array(message.slice(0, undefined));
     let stringMessage = new util_1.TextDecoder("utf-8").decode(buffer);
-    // Null safety guard
+    // Null Check
     if (!metaData) {
         console.error("Metadata for this connection was not found");
         return;
@@ -31,8 +31,10 @@ const onWebSocketMessageHandler = (ws, message, isBinary) => {
         }
     }
     else if (metaData.pathName == "/post") {
+        // add if needs to be handled
     }
     else if (metaData.pathName == "/record") {
+        // add if needs to be handled
     }
 };
 exports.onWebSocketMessageHandler = onWebSocketMessageHandler;

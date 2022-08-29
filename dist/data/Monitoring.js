@@ -22,6 +22,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -34,91 +43,94 @@ const axios_1 = __importDefault(require("axios"));
 const client = new monitoring.MetricServiceClient();
 const METADATA_URL_PREFIX = "http://metadata.google.internal/computeMetadata/v1/instance/";
 const METRIC_IDENTIFIER = "custom.googleapis.com/vm_instance/network/total_websockets_connection";
-/**
- * TODO(developer): Uncomment and edit the following lines of code.
- */
-async function createWebsocketConnectionsMetricDescriptor() {
-    const request = {
-        name: client.projectPath(config_1.appConfiguration.projectId),
-        metricDescriptor: {
-            description: 'Total number of Websockets connections with the vm instance.',
-            displayName: 'Total WebSocket Connections',
-            type: METRIC_IDENTIFIER,
-            metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
-            valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
-            unit: '1',
-            launchStage: monitoring.protos.google.api.LaunchStage.ALPHA,
-            labels: [
-                {
-                    "key": 'ws_port',
-                    "valueType": "STRING",
-                    "description": 'Port number of the instance on which the websocket server is running',
-                },
-            ],
-        },
-    };
-    // Creates a custom metric descriptor
-    // const [ descriptor ] = await client.createMetricDescriptor(request);
-    const [descriptor] = await client.createMetricDescriptor(request);
-    console.log('Created custom Metric:\n');
-    console.log(`Name: ${descriptor.displayName}`);
-    console.log(`Description: ${descriptor.description}`);
-    console.log(`Type: ${descriptor.type}`);
-    console.log(`Kind: ${descriptor.metricKind}`);
-    console.log(`Value Type: ${descriptor.valueType}`);
-    console.log(`Unit: ${descriptor.unit}`);
-    console.log('Labels:');
-    if (!!descriptor.labels && descriptor.labels.length) {
-        descriptor.labels.forEach(label => {
-            console.log(`  ${label.key} (${label.valueType}) - ${label.description}`);
-        });
-    }
-}
-exports.createWebsocketConnectionsMetricDescriptor = createWebsocketConnectionsMetricDescriptor;
-async function updateWebsocketConnectionsMetricDescriptor(connections, port) {
-    const monitoredResource = await (0, exports.getMonitoredResourceForCurrentInstance)();
-    const request = {
-        name: client.projectPath(config_1.appConfiguration.projectId),
-        timeSeries: [{
-                metric: {
-                    type: METRIC_IDENTIFIER,
-                    labels: {
-                        "ws_port": String(port),
-                    },
-                },
+function createWebsocketConnectionsMetricDescriptor() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const request = {
+            name: client.projectPath(config_1.appConfiguration.projectId),
+            metricDescriptor: {
+                description: 'Total number of Websockets connections with the vm instance.',
+                displayName: 'Total WebSocket Connections',
+                type: METRIC_IDENTIFIER,
                 metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
                 valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
-                resource: monitoredResource,
-                points: [{
-                        interval: {
-                            endTime: {
-                                seconds: (Date.now() / 1000),
+                unit: '1',
+                launchStage: monitoring.protos.google.api.LaunchStage.ALPHA,
+                labels: [
+                    {
+                        "key": 'ws_port',
+                        "valueType": "STRING",
+                        "description": 'Port number of the instance on which the websocket server is running',
+                    },
+                ],
+            },
+        };
+        // Creates a custom metric descriptor
+        // const [ descriptor ] = await client.createMetricDescriptor(request);
+        const [descriptor] = yield client.createMetricDescriptor(request);
+        console.log('Created custom Metric:\n');
+        console.log(`Name: ${descriptor.displayName}`);
+        console.log(`Description: ${descriptor.description}`);
+        console.log(`Type: ${descriptor.type}`);
+        console.log(`Kind: ${descriptor.metricKind}`);
+        console.log(`Value Type: ${descriptor.valueType}`);
+        console.log(`Unit: ${descriptor.unit}`);
+        console.log('Labels:');
+        if (!!descriptor.labels && descriptor.labels.length) {
+            descriptor.labels.forEach(label => {
+                console.log(`  ${label.key} (${label.valueType}) - ${label.description}`);
+            });
+        }
+    });
+}
+exports.createWebsocketConnectionsMetricDescriptor = createWebsocketConnectionsMetricDescriptor;
+function updateWebsocketConnectionsMetricDescriptor(connections, port) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const monitoredResource = yield (0, exports.getMonitoredResourceForCurrentInstance)();
+        const request = {
+            name: client.projectPath(config_1.appConfiguration.projectId),
+            timeSeries: [{
+                    metric: {
+                        type: METRIC_IDENTIFIER,
+                        labels: {
+                            "ws_port": String(port),
+                        },
+                    },
+                    metricKind: monitoring.protos.google.api.MetricDescriptor.MetricKind.GAUGE,
+                    valueType: monitoring.protos.google.api.MetricDescriptor.ValueType.INT64,
+                    resource: monitoredResource,
+                    points: [{
+                            interval: {
+                                endTime: {
+                                    seconds: (Date.now() / 1000),
+                                },
                             },
-                        },
-                        value: {
-                            int64Value: connections,
-                        },
-                    }],
-                unit: "1"
-            }],
-    };
-    // Writes time series data
-    const result = await client.createTimeSeries(request);
-    console.log('Done writing time series data.', result);
+                            value: {
+                                int64Value: connections,
+                            },
+                        }],
+                    unit: "1"
+                }],
+        };
+        // Writes time series data
+        const result = yield client.createTimeSeries(request);
+        console.log('Done writing time series data.', result);
+    });
 }
 exports.updateWebsocketConnectionsMetricDescriptor = updateWebsocketConnectionsMetricDescriptor;
-async function deleteWebSocketConnectionsMetricDescriptor() {
-    const metricId = METRIC_IDENTIFIER;
-    const request = {
-        name: client.projectMetricDescriptorPath(config_1.appConfiguration.projectId, metricId),
-    };
-    // Deletes a metric descriptor
-    const [result] = await client.deleteMetricDescriptor(request);
-    console.log(`Deleted ${metricId}`, result);
+function deleteWebSocketConnectionsMetricDescriptor() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const metricId = METRIC_IDENTIFIER;
+        const request = {
+            name: client.projectMetricDescriptorPath(config_1.appConfiguration.projectId, metricId),
+        };
+        // Deletes a metric descriptor
+        const [result] = yield client.deleteMetricDescriptor(request);
+        console.log(`Deleted ${metricId}`, result);
+    });
 }
 exports.deleteWebSocketConnectionsMetricDescriptor = deleteWebSocketConnectionsMetricDescriptor;
 // https://cloud.google.com/compute/docs/metadata/querying-metadata
-const getMonitoredResourceForCurrentInstance = async () => {
+const getMonitoredResourceForCurrentInstance = () => __awaiter(void 0, void 0, void 0, function* () {
     // Get the name
     // let res = await axios.get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } })
     // const instanceName = String(res.data);
@@ -138,17 +150,17 @@ const getMonitoredResourceForCurrentInstance = async () => {
             // "zone": zoneName
         }
     };
-};
+});
 exports.getMonitoredResourceForCurrentInstance = getMonitoredResourceForCurrentInstance;
-const getInstanceNameIDAndZone = async () => {
+const getInstanceNameIDAndZone = () => __awaiter(void 0, void 0, void 0, function* () {
     // Get the name
-    let res = await axios_1.default.get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } });
+    let res = yield axios_1.default.get(`${METADATA_URL_PREFIX}/name`, { headers: { "Metadata-Flavor": "Google" } });
     const instanceName = String(res.data);
     // Get the instanceId
-    res = await axios_1.default.get(`${METADATA_URL_PREFIX}/id`, { headers: { "Metadata-Flavor": "Google" } });
+    res = yield axios_1.default.get(`${METADATA_URL_PREFIX}/id`, { headers: { "Metadata-Flavor": "Google" } });
     const instanceId = String(res.data);
     // Get the zone name
-    res = await axios_1.default.get(`${METADATA_URL_PREFIX}/zone`, { headers: { "Metadata-Flavor": "Google" } });
+    res = yield axios_1.default.get(`${METADATA_URL_PREFIX}/zone`, { headers: { "Metadata-Flavor": "Google" } });
     const parts = String(res.data).split("/");
     const zoneName = parts[parts.length - 1];
     return {
@@ -156,7 +168,7 @@ const getInstanceNameIDAndZone = async () => {
         instanceId,
         instanceZone: zoneName
     };
-};
+});
 exports.getInstanceNameIDAndZone = getInstanceNameIDAndZone;
 /**
 const monitoring = require('@google-cloud/monitoring');
@@ -173,6 +185,4 @@ async function deleteWebSocketConnectionsMetricDescriptor() {
     console.log(`Deleted ${metricId}`, result);
 }
 deleteWebSocketConnectionsMetricDescriptor().then(() => console.log("Deleted")).catch((error) => console.error(error));
-
-
  */ 

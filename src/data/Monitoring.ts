@@ -9,10 +9,6 @@ const METADATA_URL_PREFIX = "http://metadata.google.internal/computeMetadata/v1/
 
 const METRIC_IDENTIFIER = "custom.googleapis.com/vm_instance/network/total_websockets_connection"
 
-/**
- * TODO(developer): Uncomment and edit the following lines of code.
- */
-
 export async function createWebsocketConnectionsMetricDescriptor() {
     const request: monitoring.protos.google.monitoring.v3.ICreateMetricDescriptorRequest = {
         name: client.projectPath(appConfiguration.projectId),
@@ -168,6 +164,4 @@ async function deleteWebSocketConnectionsMetricDescriptor() {
     console.log(`Deleted ${metricId}`, result);
 }
 deleteWebSocketConnectionsMetricDescriptor().then(() => console.log("Deleted")).catch((error) => console.error(error));
-
-
  */
